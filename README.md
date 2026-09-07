@@ -11,6 +11,42 @@ VM with a credential-proxying, policy-enforcing boundary); these kits give an
 external security platform the signals it needs to enforce and observe that
 boundary from the outside.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph HOST["Developer host machine"]
+    CLI["sbx CLI"]
+    EPA["Endpoint security agent<br/>(host-side policy engine)"]
+  end
+
+  subgraph VM["Sandbox micro VM"]
+    AGENT["AI coding agent<br/>(e.g. Claude)"]
+    subgraph KITS["Mixin kits"]
+      ENF["endpoint-enforcement<br/>marker: env + ~/.sandbox-enforced"]
+      TEL["siem-telemetry<br/>Fluent Bit forwarder"]
+    end
+    PROXY["Credential proxy + policy boundary<br/>allow/deny egress · injects credentials"]
+    LOGS["/var/log/sandbox<br/>~/.sandbox/logs"]
+  end
+
+  SIEM["SIEM HTTP event collector"]
+
+  CLI -->|launches| AGENT
+  ENF -.->|tags process| AGENT
+  AGENT -->|writes activity| LOGS
+  EPA -->|attest marker<br/>permit only sandbox-wrapped| ENF
+  TEL -->|tails| LOGS
+  TEL -->|POST JSON events| PROXY
+  PROXY -->|Authorization injected<br/>TLS, allow-listed| SIEM
+```
+
+- **`endpoint-enforcement`** tags the agent process with a marker; the host
+  endpoint policy attests it and permits only sandbox-wrapped agents.
+- **`siem-telemetry`** tails sandbox activity logs and forwards them through the
+  credential proxy — which injects the collector token and enforces the egress
+  allow-list — to the SIEM.
+
 ## Kits
 
 | Kit | Kind | Purpose |
