@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="610" viewBox="0 0 1180 610" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a94a6"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9aa3af"/>
+    </marker>
+    <marker id="arrowEnf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+  </defs>
+
+  <rect width="1180" height="610" fill="#ffffff"/>
+
+  <!-- Host machine -->
+  <rect x="28" y="48" width="900" height="548" rx="26" fill="#e9f1fc" stroke="#7aa7e0" stroke-width="2.5"/>
+  <text x="60" y="576" fill="#1e4fa3" font-size="21" font-weight="700">Host machine</text>
+
+  <!-- microVM sandbox -->
+  <rect x="70" y="108" width="270" height="344" rx="13" fill="#ffffff" stroke="#6b7787" stroke-width="2"/>
+  <text x="88" y="138" fill="#1f2937" font-size="18" font-weight="700">microVM sandbox</text>
+  <text x="320" y="138" text-anchor="end" fill="#8a94a6" font-size="13">container</text>
+
+  <!-- container dashed box -->
+  <rect x="88" y="152" width="236" height="292" rx="9" fill="none" stroke="#9aa3af" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+  <!-- Agent -->
+  <rect x="102" y="166" width="210" height="50" rx="7" fill="#ffffff" stroke="#cfd6df" stroke-width="1.5"/>
+  <text x="207" y="197" text-anchor="middle" fill="#2f6fdb" font-size="16" font-weight="700">Agent (any)</text>
+
+  <!-- endpoint-enforcement mixin -->
+  <rect x="102" y="230" width="210" height="62" rx="7" fill="#ffffff" stroke="#cfd6df" stroke-width="1.5"/>
+  <text x="207" y="255" text-anchor="middle" fill="#c2410c" font-size="15" font-weight="700">endpoint-enforcement</text>
+  <text x="207" y="275" text-anchor="middle" fill="#6b7280" font-size="11.5">marker · kind: mixin</text>
+
+  <!-- siem-telemetry mixin -->
+  <rect x="102" y="306" width="210" height="62" rx="7" fill="#ffffff" stroke="#cfd6df" stroke-width="1.5"/>
+  <text x="207" y="331" text-anchor="middle" fill="#2f6fdb" font-size="15" font-weight="700">siem-telemetry</text>
+  <text x="207" y="351" text-anchor="middle" fill="#6b7280" font-size="11.5">Fluent Bit · kind: mixin</text>
+
+  <!-- token sentinel -->
+  <rect x="102" y="382" width="210" height="50" rx="9" fill="#ece7dd" stroke="#d8cfc0" stroke-width="1.5"/>
+  <text x="207" y="403" text-anchor="middle" fill="#6b6255" font-size="12.5" font-weight="600" font-family="'SF Mono', Menlo, monospace">SIEM_COLLECTOR_TOKEN</text>
+  <text x="207" y="421" text-anchor="middle" fill="#8a8272" font-size="12.5">= proxy-managed</text>
+
+  <!-- Endpoint security agent (host policy) -->
+  <rect x="396" y="158" width="196" height="80" rx="9" fill="#fdf0e6" stroke="#e6a877" stroke-width="2"/>
+  <text x="494" y="188" text-anchor="middle" fill="#c2410c" font-size="15" font-weight="700">Endpoint security agent</text>
+  <text x="494" y="208" text-anchor="middle" fill="#9a5a33" font-size="12">host-side policy engine</text>
+  <text x="494" y="226" text-anchor="middle" fill="#9a5a33" font-size="12">permit only sandbox-wrapped</text>
+
+  <!-- endpoint agent -> agent (attest) -->
+  <line x1="396" y1="198" x2="342" y2="197" stroke="#c2410c" stroke-width="2" marker-end="url(#arrowEnf)"/>
+  <text x="369" y="188" text-anchor="middle" fill="#c2410c" font-size="10">attest marker</text>
+
+  <!-- Secret store -->
+  <rect x="396" y="262" width="196" height="60" rx="9" fill="#ffffff" stroke="#cfd6df" stroke-width="1.5"/>
+  <text x="494" y="290" text-anchor="middle" fill="#1f2937" font-size="16" font-weight="700">Secret store</text>
+  <text x="494" y="310" text-anchor="middle" fill="#6b7280" font-size="12">sbx secret set-custom</text>
+
+  <!-- secret store -> proxy -->
+  <line x1="494" y1="322" x2="494" y2="344" stroke="#8a94a6" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- sbx proxy -->
+  <rect x="396" y="346" width="196" height="80" rx="9" fill="#d9f2e4" stroke="#86d6ab" stroke-width="2"/>
+  <text x="494" y="382" text-anchor="middle" fill="#1f9d63" font-size="17" font-weight="700">sbx proxy</text>
+  <text x="494" y="404" text-anchor="middle" fill="#1f9d63" font-size="13">swaps in token</text>
+
+  <!-- proxy -> egress -->
+  <line x1="494" y1="426" x2="494" y2="448" stroke="#8a94a6" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Egress policy -->
+  <rect x="396" y="450" width="196" height="60" rx="9" fill="#ffffff" stroke="#cfd6df" stroke-width="1.5"/>
+  <text x="494" y="478" text-anchor="middle" fill="#1f2937" font-size="16" font-weight="700">Egress policy</text>
+  <text x="494" y="498" text-anchor="middle" fill="#6b7280" font-size="12.5">allow-list</text>
+
+  <!-- siem-telemetry -> proxy (ship logs) -->
+  <line x1="312" y1="337" x2="392" y2="380" stroke="#8a94a6" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="352" y="349" text-anchor="middle" fill="#6b7280" font-size="11">ship logs</text>
+
+  <!-- proxy -> SIEM collector -->
+  <line x1="592" y1="382" x2="996" y2="363" stroke="#9aa3af" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrowDash)"/>
+  <text x="792" y="360" text-anchor="middle" fill="#6b7280" font-size="11">POST JSON events</text>
+  <text x="792" y="376" text-anchor="middle" fill="#6b7280" font-size="10">token injected</text>
+
+  <!-- egress -> registries -->
+  <line x1="592" y1="480" x2="996" y2="482" stroke="#9aa3af" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrowDash)"/>
+  <text x="792" y="472" text-anchor="middle" fill="#6b7280" font-size="10">install-time only</text>
+
+  <!-- SIEM HTTP collector (external) -->
+  <rect x="1000" y="324" width="168" height="78" rx="9" fill="#ffffff" stroke="#cfd6df" stroke-width="1.5"/>
+  <text x="1084" y="356" text-anchor="middle" fill="#4338ca" font-size="15" font-weight="700">SIEM HTTP collector</text>
+  <text x="1084" y="378" text-anchor="middle" fill="#6b7280" font-size="12.5">event ingest endpoint</text>
+
+  <!-- Registries (external) -->
+  <rect x="1000" y="452" width="168" height="62" rx="9" fill="#ffffff" stroke="#cfd6df" stroke-width="1.5"/>
+  <text x="1084" y="480" text-anchor="middle" fill="#1f2937" font-size="15" font-weight="700">Package registries</text>
+  <text x="1084" y="500" text-anchor="middle" fill="#6b7280" font-size="12.5">apt · pip · npm</text>
+
+  <!-- caption -->
+  <text x="1000" y="548" fill="#1e4fa3" font-size="15" font-weight="700">Collector token never</text>
+  <text x="1000" y="568" fill="#1e4fa3" font-size="15" font-weight="700">enters the sandbox</text>
+  <text x="1000" y="590" fill="#3b7fd6" font-size="12.5">Proxy swaps it in at the boundary</text>
+</svg>

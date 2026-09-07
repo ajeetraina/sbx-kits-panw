@@ -1,5 +1,7 @@
 # sbx-kits
 
+<img width="1180" alt="sbx-kits architecture" src="docs/architecture.svg" />
+
 Docker Sandboxes kits that integrate sandboxed AI coding agents with a security
 platform along two axes:
 
@@ -9,43 +11,27 @@ platform along two axes:
 Docker controls the runtime blast radius (each agent runs in an isolated micro
 VM with a credential-proxying, policy-enforcing boundary); these kits give an
 external security platform the signals it needs to enforce and observe that
-boundary from the outside.
+boundary from the outside — defense in depth without either side losing control.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  subgraph HOST["Developer host machine"]
-    CLI["sbx CLI"]
-    EPA["Endpoint security agent<br/>(host-side policy engine)"]
-  end
+The kits compose the sandbox's isolation + egress control with two external
+security functions (diagram above):
 
-  subgraph VM["Sandbox micro VM"]
-    AGENT["AI coding agent<br/>(e.g. Claude)"]
-    subgraph KITS["Mixin kits"]
-      ENF["endpoint-enforcement<br/>marker: env + ~/.sandbox-enforced"]
-      TEL["siem-telemetry<br/>Fluent Bit forwarder"]
-    end
-    PROXY["Credential proxy + policy boundary<br/>allow/deny egress · injects credentials"]
-    LOGS["/var/log/sandbox<br/>~/.sandbox/logs"]
-  end
-
-  SIEM["SIEM HTTP event collector"]
-
-  CLI -->|launches| AGENT
-  ENF -.->|tags process| AGENT
-  AGENT -->|writes activity| LOGS
-  EPA -->|attest marker<br/>permit only sandbox-wrapped| ENF
-  TEL -->|tails| LOGS
-  TEL -->|POST JSON events| PROXY
-  PROXY -->|Authorization injected<br/>TLS, allow-listed| SIEM
-```
-
-- **`endpoint-enforcement`** tags the agent process with a marker; the host
-  endpoint policy attests it and permits only sandbox-wrapped agents.
-- **`siem-telemetry`** tails sandbox activity logs and forwards them through the
-  credential proxy — which injects the collector token and enforces the egress
-  allow-list — to the SIEM.
+1. **Install time**: `siem-telemetry` pulls Fluent Bit from the package
+   registries; both kits are `kind: mixin`, so they layer onto whatever base
+   agent you run.
+2. **In the container**: `endpoint-enforcement` marks the agent process
+   (`SANDBOX_ENFORCED=1` + a read-only `~/.sandbox-enforced` attestation file),
+   and the collector credential reads as the literal `proxy-managed` sentinel —
+   the real token is never present.
+3. **At the host endpoint**: the endpoint security agent attests the marker and
+   **permits only sandbox-wrapped agents** — any agent process that spawns
+   outside a sandbox is denied.
+4. **At the sbx proxy**: `siem-telemetry` ships activity logs outbound; the proxy
+   checks the collector host against the egress allow-list and swaps the
+   `proxy-managed` sentinel for the real token in the `Authorization` header, so
+   the SIEM sees authenticated JSON events while the container never held the key.
 
 ## Kits
 
