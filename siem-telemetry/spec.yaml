@@ -1,0 +1,63 @@
+schemaVersion: "2"
+kind: mixin
+name: siem-telemetry
+displayName: SIEM Telemetry Forwarder
+description: >-
+  Ships sandbox observability (process, network, file, and agent-activity logs)
+  to a SIEM HTTP event collector for dashboards, correlation, and automated
+  response. Closes the visibility gap for what runs inside the sandbox.
+licenses:
+  - Apache-2.0
+
+args:
+  siemCollectorHost:
+    required: true
+    description: "SIEM HTTP event collector ingestion host (FQDN, no scheme)."
+    pattern: '^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$'
+  siemCollectorPath:
+    default: "/logs/v1/event"
+    description: "HTTP path on the collector to POST events to."
+    pattern: '^/[A-Za-z0-9._~/-]*$'
+
+credentials:
+  - service: siem
+    description: "SIEM HTTP collector API token"
+    required: true
+    apiKey:
+      name: SIEM_COLLECTOR_TOKEN
+      inject:
+        - domain: "${{ kit.args.siemCollectorHost }}"
+          header: Authorization
+          format: "%s"
+
+permissions:
+  network:
+    allow:
+      # Collector ingestion endpoint (token injected by the proxy).
+      - "${{ kit.args.siemCollectorHost }}"
+      # Fluent Bit installer + package repo.
+      - raw.githubusercontent.com
+      - packages.fluentbit.io
+
+setup:
+  install:
+    - command: "command -v fluent-bit >/dev/null 2>&1 || curl -fsSL https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh"
+      description: Install Fluent Bit log forwarder
+  startup:
+    - command: ["sh", "-c", "mkdir -p /home/agent/.sandbox/logs && exec fluent-bit -c /home/agent/.config/fluent-bit/sandbox-telemetry.conf"]
+      user: "1000"
+      background: true
+      description: Forward sandbox telemetry to the SIEM collector
+
+agentInstructions:
+  content: |
+    ## SIEM telemetry
+
+    This sandbox forwards its observability data to an external SIEM HTTP event
+    collector via a Fluent Bit forwarder running in the background. Process,
+    network, file, and agent-activity logs written under `/var/log/sandbox/` and
+    `~/.sandbox/logs/` are tailed and shipped continuously.
+
+    To emit a custom event into the pipeline, append a JSON line to a `.log`
+    file under `~/.sandbox/logs/`. The collector token is proxy-managed — the
+    container never holds the real credential.
