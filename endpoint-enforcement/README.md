@@ -33,7 +33,7 @@ signal the host policy keys on.
 Published OCI artifact:
 
 ```bash
-sbx run claude --kit docker.io/sbx/endpoint-enforcement-kit:latest .
+sbx run claude --kit docker.io/ajeetraina777/sbx-kits-panw:endpoint-enforcement .
 ```
 
 Git reference:

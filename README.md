@@ -5,29 +5,29 @@
 Docker Sandboxes kits that integrate sandboxed AI coding agents with a security
 platform along two axes:
 
-- **Where an agent may run** — enforced at the host endpoint.
-- **What an agent did** — reported to a SIEM.
+- **Where an agent may run**: enforced at the host endpoint.
+- **What an agent did**: reported to a SIEM.
 
 Docker controls the runtime blast radius (each agent runs in an isolated micro
 VM with a credential-proxying, policy-enforcing boundary); these kits give an
 external security platform the signals it needs to enforce and observe that
-boundary from the outside — defense in depth without either side losing control.
+boundary from the outside: defense in depth without either side losing control.
 
 ## Architecture
 
 The kits compose the sandbox's isolation + egress control with two external
 security functions (diagram above):
 
-1. **Install time**: `siem-telemetry` installs Fluent Bit — the prebuilt
+1. **Install time**: `siem-telemetry` installs Fluent Bit (the prebuilt
    package on 4 KB-page hosts (amd64), a jemalloc-free source build on
-   16 KB-page hosts (arm64 microVMs) — so it works on both architectures; both
+   16 KB-page hosts (arm64 microVMs)), so it works on both architectures; both
    kits are `kind: mixin`, so they layer onto whatever base agent you run.
 2. **In the container**: `endpoint-enforcement` marks the agent process
    (`SANDBOX_ENFORCED=1` + a read-only `~/.sandbox-enforced` attestation file),
-   and the collector credential reads as the literal `proxy-managed` sentinel —
+   and the collector credential reads as the literal `proxy-managed` sentinel;
    the real token is never present.
 3. **At the host endpoint**: the endpoint security agent attests the marker and
-   **permits only sandbox-wrapped agents** — any agent process that spawns
+   **permits only sandbox-wrapped agents**; any agent process that spawns
    outside a sandbox is denied.
 4. **At the sbx proxy**: `siem-telemetry` ships activity logs outbound; the proxy
    checks the collector host against the egress allow-list and swaps the
@@ -52,7 +52,7 @@ Run a base agent with one kit:
 sbx run claude --kit ./endpoint-enforcement/ .
 ```
 
-Stack both — enforcement governs *where* the agent runs, telemetry reports
+Stack both: enforcement governs *where* the agent runs, telemetry reports
 *what* it did:
 
 ```bash
