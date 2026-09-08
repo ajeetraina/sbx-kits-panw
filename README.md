@@ -18,9 +18,10 @@ boundary from the outside — defense in depth without either side losing contro
 The kits compose the sandbox's isolation + egress control with two external
 security functions (diagram above):
 
-1. **Install time**: `siem-telemetry` pulls Fluent Bit from the package
-   registries; both kits are `kind: mixin`, so they layer onto whatever base
-   agent you run.
+1. **Install time**: `siem-telemetry` installs Fluent Bit — the prebuilt
+   package on 4 KB-page hosts (amd64), a jemalloc-free source build on
+   16 KB-page hosts (arm64 microVMs) — so it works on both architectures; both
+   kits are `kind: mixin`, so they layer onto whatever base agent you run.
 2. **In the container**: `endpoint-enforcement` marks the agent process
    (`SANDBOX_ENFORCED=1` + a read-only `~/.sandbox-enforced` attestation file),
    and the collector credential reads as the literal `proxy-managed` sentinel —
