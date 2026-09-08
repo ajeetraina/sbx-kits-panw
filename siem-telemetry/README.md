@@ -38,32 +38,26 @@ response.
 
 ## Credential binding
 
-The kit declares a `siem` credential injected as the `Authorization` header on
-requests to `siemCollectorHost`. Injection needs **both** a stored value and a
-user-side binding that authorizes the collector domain; a stored secret alone
-is not enough (`sbx create` warns `no binding authorizes this service`).
-
-Store the token, then declare the binding in `~/.config/sbx/credentials.yaml`:
+The collector token is supplied with a **custom secret**, bound to the
+collector host and exposed to the sandbox as the `SIEM_COLLECTOR_TOKEN`
+environment variable:
 
 ```bash
-# value goes in the secret store (global or --sandbox scoped)
-sbx secret set siem
+sbx secret set-custom \
+  --host collector.example.internal \
+  --env SIEM_COLLECTOR_TOKEN \
+  --value "$SIEM_COLLECTOR_TOKEN"
 ```
 
-```yaml
-# ~/.config/sbx/credentials.yaml: declares WHERE the value lives + which
-# domains it may be injected into (must include your siemCollectorHost)
-bindings:
-  siem:
-    discovery: []                         # value comes from `sbx secret set siem`
-    allowedDomains:
-      - collector.example.internal        # your siemCollectorHost
-```
+The sandbox only ever sees a **placeholder** in `SIEM_COLLECTOR_TOKEN`. Fluent
+Bit sends that placeholder in the `Authorization` header (see
+`sandbox-telemetry.conf`), and the sandbox proxy swaps it for the real token on
+requests to the collector host, so the container never holds the real value.
+The `--host` must match your `siemCollectorHost`.
 
-To source the token from an env var or file instead of the secret store,
-replace `discovery: []` with e.g. `discovery: [{ env: [SIEM_COLLECTOR_TOKEN] }]`.
-The engine injects the credential only into domains present in **both** the
-kit's `inject[].domain` and your `allowedDomains`.
+Scope the secret to one sandbox with `--sandbox <name>`, or omit it to apply
+globally. If no custom secret is set, the header expands to empty and events
+are sent unauthenticated.
 
 ## Usage
 

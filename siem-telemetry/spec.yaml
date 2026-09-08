@@ -19,16 +19,10 @@ args:
     description: "HTTP path on the collector to POST events to."
     pattern: '^/[A-Za-z0-9._~/-]*$'
 
-credentials:
-  - service: siem
-    description: "SIEM HTTP collector API token"
-    required: true
-    apiKey:
-      name: SIEM_COLLECTOR_TOKEN
-      inject:
-        - domain: "${{ kit.args.siemCollectorHost }}"
-          header: Authorization
-          format: "%s"
+# The collector token is supplied out-of-band with `sbx secret set-custom`
+# (host = siemCollectorHost, env = SIEM_COLLECTOR_TOKEN). The sandbox sees only
+# a placeholder; the proxy swaps it for the real token on requests to the
+# collector, so no kit-declared credential is needed. See README.md.
 
 permissions:
   network:
