@@ -54,6 +54,12 @@ permissions:
 
 setup:
   install:
+    # The tail input reads /var/log/sandbox/*.log; create the directory (as root,
+    # world-readable) so the forwarder — running as uid 1000 — can scan it even
+    # when this template does not pre-create it. Without this, Fluent Bit logs a
+    # "read error, check permissions" every refresh interval.
+    - command: mkdir -p /var/log/sandbox && chmod 0755 /var/log/sandbox
+      description: Ensure the host-side sandbox log directory exists for the forwarder to tail
     # Fluent Bit's prebuilt package bundles a jemalloc compiled for 4KB memory
     # pages; it aborts on 16KB-page hosts (the sandbox microVM on Apple Silicon)
     # with "Unsupported system page size". So install by page size, not by arch:
@@ -82,8 +88,10 @@ setup:
         rm -rf /tmp/fluent-bit-src /tmp/fluent-bit-src.tar.gz /tmp/fluent-bit-build
       description: Install Fluent Bit — prebuilt on 4KB-page hosts, source build (jemalloc off) on 16KB-page hosts
   startup:
-    # Resolve fluent-bit from PATH if present, else the package's install path.
-    - command: ["sh", "-c", "mkdir -p /home/agent/.sandbox/logs && exec \"$(command -v fluent-bit || echo /opt/fluent-bit/bin/fluent-bit)\" -c /home/agent/.config/fluent-bit/sandbox-telemetry.conf"]
+    # run-telemetry.sh copies the base conf, appends the Authorization /
+    # x-xdr-auth-id headers only when their values are non-empty (Fluent Bit
+    # renders an empty header value as `Key: Key`), then execs fluent-bit.
+    - command: ["sh", "/home/agent/.config/fluent-bit/run-telemetry.sh"]
       user: "1000"
       background: true
       description: Forward sandbox telemetry to the SIEM collector
