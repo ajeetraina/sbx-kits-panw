@@ -1,5 +1,10 @@
 # sbx-kits
 
+> **Extend your endpoint-security and SIEM stack into the sandbox boundary.**
+> Security kits for [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) that
+> govern *where* sandboxed AI coding agents may run and stream *what* they did to
+> your SIEM — defense in depth for the microVM, enforced and observed from the host.
+
 <img width="1180" alt="sbx-kits architecture" src="docs/architecture.svg" />
 
 Docker Sandboxes kits that integrate sandboxed AI coding agents with a security
