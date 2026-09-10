@@ -35,6 +35,7 @@ response.
 |---|---|---|---|
 | `siemCollectorHost` | yes | - | Collector ingestion FQDN (no scheme). |
 | `siemCollectorPath` | no | `/logs/v1/event` | HTTP path events are POSTed to. |
+| `siemCollectorAuthId` | no | `""` | Cortex XSIAM HTTP Collector API key ID (numeric, non-secret), sent as the `x-xdr-auth-id` header. Required by XSIAM; leave empty for collectors that authenticate with the `Authorization` header alone. |
 
 ## Credential binding
 
@@ -58,6 +59,24 @@ The `--host` must match your `siemCollectorHost`.
 Scope the secret to one sandbox with `--sandbox <name>`, or omit it to apply
 globally. If no custom secret is set, the header expands to empty and events
 are sent unauthenticated.
+
+### Cortex XSIAM
+
+XSIAM's HTTP collector authenticates with **two** values: the API key
+(`Authorization` header, above) and its numeric key **ID** (`x-xdr-auth-id`
+header). The ID is a non-secret identifier, so pass it as a plain arg rather
+than a secret:
+
+```bash
+sbx run claude \
+  --kit ./siem-telemetry/ \
+  --arg siem-telemetry.siemCollectorHost=api-<tenant>.xdr.<region>.paloaltonetworks.com \
+  --arg siem-telemetry.siemCollectorAuthId=<key-id> .
+```
+
+XSIAM rejects requests missing either value, so both are needed for a live
+tenant. Non-XSIAM collectors that need only the `Authorization` token can leave
+`siemCollectorAuthId` empty.
 
 ## Usage
 

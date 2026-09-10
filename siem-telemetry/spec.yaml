@@ -18,6 +18,13 @@ args:
     default: "/logs/v1/event"
     description: "HTTP path on the collector to POST events to."
     pattern: '^/[A-Za-z0-9._~/-]*$'
+  siemCollectorAuthId:
+    default: ""
+    description: >-
+      Cortex XSIAM HTTP Collector API key ID (numeric, non-secret), sent as the
+      x-xdr-auth-id header alongside the Authorization token. XSIAM requires both;
+      leave empty for collectors that authenticate with the Authorization header alone.
+    pattern: '^[0-9]*$'
 
 # The collector token is supplied out-of-band with `sbx secret set-custom`
 # (host = siemCollectorHost, env = SIEM_COLLECTOR_TOKEN). The sandbox sees only
