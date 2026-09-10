@@ -18,7 +18,11 @@ response.
     compiled for 4 KB pages and aborts on 16 KB pages with `Unsupported system
     page size`; a libc-malloc build runs on both.
 - Runs it in the background at startup, tailing process/network/file/agent
-  activity logs from `/var/log/sandbox/` and `~/.sandbox/logs/`.
+  activity logs from `/var/log/sandbox/` and `~/.sandbox/logs/`. **Each log line
+  must be a single JSON object**; the forwarder parses it so the keys land as
+  top-level event fields (not nested as an escaped string), letting the SIEM
+  index `event_type`, `action`, etc. directly — no per-source parser needed on
+  the collector.
 - POSTs events as JSON lines to your SIEM's HTTP event collector over TLS.
 - Injects the collector token via the sandbox proxy; the container never holds
   the real credential.
@@ -35,6 +39,7 @@ response.
 |---|---|---|---|
 | `siemCollectorHost` | yes | - | Collector ingestion FQDN (no scheme). |
 | `siemCollectorPath` | no | `/logs/v1/event` | HTTP path events are POSTed to. |
+| `siemCollectorAuthId` | no | `""` | Cortex XSIAM HTTP Collector API key ID (numeric, non-secret), sent as the `x-xdr-auth-id` header. Required by XSIAM; leave empty for collectors that authenticate with the `Authorization` header alone. |
 
 ## Credential binding
 
@@ -56,8 +61,28 @@ requests to the collector host, so the container never holds the real value.
 The `--host` must match your `siemCollectorHost`.
 
 Scope the secret to one sandbox with `--sandbox <name>`, or omit it to apply
-globally. If no custom secret is set, the header expands to empty and events
-are sent unauthenticated.
+globally. If no custom secret is set, the `Authorization` header is omitted
+entirely and events are sent unauthenticated (the forwarder adds the header only
+when `SIEM_COLLECTOR_TOKEN` is non-empty — an empty value would otherwise be
+shipped as the literal header name).
+
+### Cortex XSIAM
+
+XSIAM's HTTP collector authenticates with **two** values: the API key
+(`Authorization` header, above) and its numeric key **ID** (`x-xdr-auth-id`
+header). The ID is a non-secret identifier, so pass it as a plain arg rather
+than a secret:
+
+```bash
+sbx run claude \
+  --kit ./siem-telemetry/ \
+  --arg siem-telemetry.siemCollectorHost=api-<tenant>.xdr.<region>.paloaltonetworks.com \
+  --arg siem-telemetry.siemCollectorAuthId=<key-id> .
+```
+
+XSIAM rejects requests missing either value, so both are needed for a live
+tenant. Non-XSIAM collectors that need only the `Authorization` token can leave
+`siemCollectorAuthId` empty.
 
 ## Usage
 
