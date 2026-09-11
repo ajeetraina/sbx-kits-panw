@@ -7,9 +7,10 @@ localhost — no SIEM/XSIAM tenant required — and asserts the delivery contrac
 
 - events arrive as **flattened top-level JSON fields** (the `Parser json` on the
   tail input, not nested under `log`);
-- `Content-Type: application/json` (set automatically by `Format json_lines`,
-  which is what Cortex XSIAM expects — so the conf adds **no** explicit
-  Content-Type header, which would duplicate it);
+- `Content-Type: application/json` (XSIAM's requirement). `json_lines` defaults to
+  `application/x-ndjson`, so the conf overrides it with an explicit header plus
+  `allow_duplicated_headers off`; the test asserts exactly one Content-Type and
+  that it is `application/json`;
 - an ISO 8601 **`timestamp`** field is present (XSIAM's parsing rule maps this to
   `_time`; unrecognised times fall back to ingestion time);
 - both the **`Authorization`** and **`x-xdr-auth-id`** auth headers are sent.

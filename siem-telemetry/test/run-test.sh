@@ -61,6 +61,8 @@ cat > "$WORK/telemetry-test.conf" <<EOF
     URI              /logs/v1/event
     TLS              Off
     Format           json_lines
+    allow_duplicated_headers false
+    Header Content-Type application/json
     Json_Date_Key    timestamp
     Json_Date_Format iso8601
     Retry_Limit      3
@@ -104,9 +106,13 @@ if cap["path"] != "/logs/v1/event":
     errs.append(f'path: expected /logs/v1/event, got {cap["path"]}')
 
 h = cap["headers"]
-ct = h.get("content-type", "")
-if "application/json" not in ct:
-    errs.append(f'Content-Type: expected application/json, got {ct!r}')
+# Exactly one Content-Type, and it must be application/json (XSIAM requirement):
+# json_lines defaults to application/x-ndjson, so the conf overrides it with
+# allow_duplicated_headers off — this asserts the override applied and did NOT
+# leave a duplicate header behind.
+cts = cap.get("content_type_all", [])
+if cts != ["application/json"]:
+    errs.append(f'Content-Type: expected exactly ["application/json"], got {cts!r}')
 if h.get("authorization") != "test-token-placeholder":
     errs.append(f'Authorization header missing/wrong: {h.get("authorization")!r}')
 if h.get("x-xdr-auth-id") != "1234567":

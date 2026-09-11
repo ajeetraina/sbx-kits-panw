@@ -31,6 +31,9 @@ def main() -> None:
                             "path": self.path,
                             # Header names are case-insensitive; normalise to lower.
                             "headers": {k.lower(): v for k, v in self.headers.items()},
+                            # All Content-Type values, so the test can catch a
+                            # duplicated header (auto x-ndjson + our override).
+                            "content_type_all": self.headers.get_all("Content-Type") or [],
                             "body": body,
                         },
                         fh,

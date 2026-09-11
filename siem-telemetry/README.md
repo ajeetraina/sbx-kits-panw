@@ -90,9 +90,10 @@ delivery test and a live-XSIAM validation runbook.
 
 ## Event delivery format
 
-- **Content-Type** is `application/json`, set automatically by `Format json_lines`
-  (adding an explicit header would duplicate it) — exactly what the XSIAM HTTP
-  collector expects.
+- **Content-Type** is `application/json`, as the XSIAM HTTP collector requires.
+  Fluent Bit's `json_lines` defaults to `application/x-ndjson`, so the conf
+  overrides it with an explicit header plus `allow_duplicated_headers off` (which
+  replaces the auto value rather than sending both).
 - Each event carries an ISO 8601 **`timestamp`** field; XSIAM's parsing rule maps
   it to `_time` (unrecognised times fall back to XSIAM ingestion time).
 - Each log line is parsed as JSON so its keys land as **top-level** event fields,
