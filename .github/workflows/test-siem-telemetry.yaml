@@ -1,0 +1,33 @@
+name: Test siem-telemetry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "siem-telemetry/**"
+      - ".github/workflows/test-siem-telemetry.yaml"
+  pull_request:
+    paths:
+      - "siem-telemetry/**"
+      - ".github/workflows/test-siem-telemetry.yaml"
+  workflow_dispatch:
+
+jobs:
+  mock-collector-delivery:
+    # ubuntu-24.04 is amd64 / 4 KB pages, so Fluent Bit's prebuilt package runs.
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Fluent Bit
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh
+          /opt/fluent-bit/bin/fluent-bit --version
+
+      - name: Run mock-collector delivery test
+        # $CI is set by GitHub Actions, so a missing fluent-bit fails rather than skips.
+        run: |
+          export PATH="/opt/fluent-bit/bin:$PATH"
+          bash siem-telemetry/test/run-test.sh

@@ -84,6 +84,22 @@ XSIAM rejects requests missing either value, so both are needed for a live
 tenant. Non-XSIAM collectors that need only the `Authorization` token can leave
 `siemCollectorAuthId` empty.
 
+See [`docs/palo-alto-networks.md`](../docs/palo-alto-networks.md) for the full
+product mapping, and [`test/README.md`](./test/README.md) for the mock-collector
+delivery test and a live-XSIAM validation runbook.
+
+## Event delivery format
+
+- **Content-Type** is `application/json`, set automatically by `Format json_lines`
+  (adding an explicit header would duplicate it) — exactly what the XSIAM HTTP
+  collector expects.
+- Each event carries an ISO 8601 **`timestamp`** field; XSIAM's parsing rule maps
+  it to `_time` (unrecognised times fall back to XSIAM ingestion time).
+- Each log line is parsed as JSON so its keys land as **top-level** event fields,
+  not nested under `log`.
+
+The [mock-collector test](./test/README.md) asserts all three on every change.
+
 ## Usage
 
 Published OCI artifact:
