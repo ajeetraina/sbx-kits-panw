@@ -22,6 +22,22 @@ Enforcement itself is configured on the host endpoint agent (out of scope for a
 kit, which can only act inside the container). This kit provides the identifiable
 signal the host policy keys on.
 
+## Palo Alto Networks (Cortex XDR)
+
+The "host-side endpoint security policy engine" this kit targets is the **Cortex
+XDR agent**. Deploy it to the hosts that run `sbx`, then author a Restrictions /
+Behavioral Threat or custom prevention rule that:
+
+- **allow-lists** agent processes carrying this kit's marker — environment
+  variable `SANDBOX_ENFORCEMENT_MARKER=<markerId>` or the file
+  `~/.sandbox-enforced`; and
+- **denies (or alerts on)** the same agent binaries when the marker is absent —
+  i.e. an agent spawned outside a sandbox.
+
+Keep `markerId` in sync between this kit and the XDR rule — the marker is the
+shared contract. See [`docs/palo-alto-networks.md`](../docs/palo-alto-networks.md)
+for the full product mapping.
+
 ## Arguments
 
 | Arg | Default | Description |

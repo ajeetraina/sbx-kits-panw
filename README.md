@@ -49,6 +49,11 @@ security functions (diagram above):
 Both are `kind: mixin`, `schemaVersion: "2"`, and layer onto any base agent
 (e.g. `claude`).
 
+The kits are written against vendor-generic terms; see
+[`docs/palo-alto-networks.md`](./docs/palo-alto-networks.md) for how they map to
+concrete **Cortex XSIAM** (SIEM) and **Cortex XDR** (endpoint) products, and what
+is configured in-kit vs. on the Palo Alto Networks side.
+
 ## Quick start
 
 Run a base agent with one kit:
