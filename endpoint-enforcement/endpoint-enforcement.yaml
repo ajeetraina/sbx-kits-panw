@@ -1,0 +1,60 @@
+# syntax=docker/sandbox-kit:3
+#
+# Endpoint Enforcement Marker — a MIXIN. It ships no ENTRYPOINT: the base
+# workload's launch command stays. Layer it onto a workload with
+# `sbx run <workload> --kit ./endpoint-enforcement .`.
+#
+# MIGRATION NOTE (v2 → v3): a faithful 1:1 port of the v2 spec.yaml. kind stays
+# `mixin`. The two mappings worth calling out:
+#   - v2 `environment.variables` split by how the value resolves. The constant
+#     SANDBOX_ENFORCED=1 becomes an `ENV` on the overlay recipe (image-config
+#     env merges into the composed image). The arg-derived
+#     SANDBOX_ENFORCEMENT_MARKER becomes the `markerId` arg's `env:` export, so
+#     it still resolves at create and stays overridable with --kit-arg (a
+#     buildArg would bake it at publish and a published kit could no longer be
+#     re-pointed at create).
+#   - v2 `setup.files` becomes lifecycle@1 `files:` (onlyIfMissing → overwrite:
+#     false); `agentInstructions` becomes agent-context@1.
+schemaVersion: "3"
+kind: mixin
+displayName: Endpoint Enforcement Marker
+description: >-
+  Marks agent processes as running inside a sandbox so a host-side endpoint
+  security policy engine can permit sandbox-wrapped agents while denying any
+  agent process that spawns outside a sandbox.
+version: "1.0.0"
+sourceUrl: https://github.com/ajeetraina/sbx-kits-panw
+licenses:
+  - Apache-2.0
+
+args:
+  markerId:
+    default: "sandbox-wrapped"
+    description: "Identity string the host endpoint policy keys on to allow this process."
+    pattern: '^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$'
+    # Host-side endpoint policy allow-lists agent processes carrying this marker.
+    # v2 set it via environment.variables; the `env:` export is its v3 home, and
+    # keeps the value resolving at create so --kit-arg still overrides it.
+    env: SANDBOX_ENFORCEMENT_MARKER
+
+capabilities:
+  - type: com.docker.sandbox/lifecycle@1
+    config:
+      files:
+        # A stable on-disk marker the endpoint agent can attest against,
+        # independent of the process environment. Written once (overwrite:
+        # false, from v2's onlyIfMissing) so restarts are safe; markerId
+        # expands at create exactly as v2's decode-time substitution did.
+        - path: /home/agent/.sandbox-enforced
+          mode: "0444"
+          overwrite: false
+          description: Write the sandbox enforcement marker file
+          content: |
+            marker=${{ kit.args.markerId }}
+            enforced=1
+
+  # v2 `agentInstructions.content` → agent-context@1. A tool mixin contributes a
+  # body and owns no profile, so it carries `contentFile` alone (no `filename`).
+  - type: com.docker.sandbox/agent-context@1
+    config:
+      contentFile: ./endpoint-enforcement-context.md

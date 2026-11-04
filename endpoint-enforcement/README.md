@@ -67,5 +67,5 @@ sbx run claude --kit ./endpoint-enforcement/ .
 Override the marker:
 
 ```bash
-sbx run claude --kit ./endpoint-enforcement/ --arg endpoint-enforcement.markerId=my-fleet .
+sbx run claude --kit ./endpoint-enforcement/ --kit-arg endpoint-enforcement.markerId=my-fleet .
 ```
