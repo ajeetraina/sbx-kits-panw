@@ -24,10 +24,11 @@ Requires `fluent-bit` (and `python3`). If Fluent Bit is not installed the script
 wired into `.github/workflows/test-siem-telemetry.yaml`, which installs Fluent Bit
 and runs it on every change under `siem-telemetry/`.
 
-The test uses a localhost conf modelled on the kit's `[OUTPUT]` because the kit's
-own `sandbox-telemetry.conf` carries `${{ kit.args.* }}` placeholders that only
-`sbx` substitutes at decode time. Spec/arg validation is covered separately by
-`sbx kit validate`.
+The test uses a localhost conf modelled on the kit's `[OUTPUT]` because the kit
+writes its `sandbox-telemetry.conf` via lifecycle `files:` in
+`siem-telemetry.yaml`, carrying `${{ kit.args.* }}` placeholders that only
+`sbx` substitutes at create time. Descriptor validation is covered separately
+by building the kit (`docker buildx build . -f siem-telemetry.yaml`).
 
 ## Manual: live Cortex XSIAM tenant runbook
 
