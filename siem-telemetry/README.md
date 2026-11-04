@@ -41,6 +41,11 @@ response.
 | `siemCollectorPath` | no | `/logs/v1/event` | HTTP path events are POSTed to. |
 | `siemCollectorAuthId` | no | `""` | Cortex XSIAM HTTP Collector API key ID (numeric, non-secret), sent as the `x-xdr-auth-id` header. Required by XSIAM; leave empty for collectors that authenticate with the `Authorization` header alone. |
 
+The kit writes its Fluent Bit config and launcher through lifecycle `files:`,
+with each `${{ kit.args.* }}` reference substituted at sandbox-create time, so
+the host, path and key ID land in the config without ever being baked into an
+image.
+
 ## Credential binding
 
 The collector token is supplied with a **custom secret**, bound to the
@@ -76,8 +81,8 @@ than a secret:
 ```bash
 sbx run claude \
   --kit ./siem-telemetry/ \
-  --arg siem-telemetry.siemCollectorHost=api-<tenant>.xdr.<region>.paloaltonetworks.com \
-  --arg siem-telemetry.siemCollectorAuthId=<key-id> .
+  --kit-arg siem-telemetry.siemCollectorHost=api-<tenant>.xdr.<region>.paloaltonetworks.com \
+  --kit-arg siem-telemetry.siemCollectorAuthId=<key-id> .
 ```
 
 XSIAM rejects requests missing either value, so both are needed for a live
@@ -108,7 +113,7 @@ Published OCI artifact:
 ```bash
 sbx run claude \
   --kit docker.io/ajeetraina777/sbx-kits-panw:siem-telemetry \
-  --arg siem-telemetry.siemCollectorHost=collector.example.internal .
+  --kit-arg siem-telemetry.siemCollectorHost=collector.example.internal .
 ```
 
 Git reference:
@@ -116,7 +121,7 @@ Git reference:
 ```bash
 sbx run claude \
   --kit "git+https://github.com/ajeetraina/sbx-kits-panw.git#ref=<40-hex-sha>&dir=siem-telemetry" \
-  --arg siem-telemetry.siemCollectorHost=collector.example.internal .
+  --kit-arg siem-telemetry.siemCollectorHost=collector.example.internal .
 ```
 
 Local path:
@@ -124,17 +129,19 @@ Local path:
 ```bash
 sbx run claude \
   --kit ./siem-telemetry/ \
-  --arg siem-telemetry.siemCollectorHost=collector.example.internal .
+  --kit-arg siem-telemetry.siemCollectorHost=collector.example.internal .
 ```
 
 ## Network access
 
-The kit's `permissions.network.allow` lists every host either install path or
-the forwarder reaches: the collector (`siemCollectorHost`), the prebuilt
-package (`raw.githubusercontent.com`, `packages.fluentbit.io`), the source
-tarball (`github.com`, `codeload.github.com`), and apt
-(`archive.ubuntu.com`, `security.ubuntu.com`, `ports.ubuntu.com`,
-`download.docker.com`).
+The kit's `network-policy@1` capability is **phase-scoped**. The **runtime**
+phase allows only the collector (`siemCollectorHost`), reached by the forwarder
+in steady state. The **install** phase allows the hosts the Fluent Bit install
+hook reaches — the prebuilt package (`raw.githubusercontent.com`,
+`packages.fluentbit.io`), the source tarball (`github.com`,
+`codeload.github.com`), and apt (`archive.ubuntu.com`, `security.ubuntu.com`,
+`ports.ubuntu.com`, `download.docker.com`) — and is closed before the agent
+starts.
 
 > **Under organization-managed governance**, a deny-by-default org policy takes
 > precedence over a kit's own allow-list; the kit declaring a host is not
@@ -150,5 +157,5 @@ SIEM telemetry reports *what* it did:
 sbx run claude \
   --kit ./endpoint-enforcement/ \
   --kit ./siem-telemetry/ \
-  --arg siem-telemetry.siemCollectorHost=collector.example.internal .
+  --kit-arg siem-telemetry.siemCollectorHost=collector.example.internal .
 ```

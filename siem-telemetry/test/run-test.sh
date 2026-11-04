@@ -32,8 +32,16 @@ fi
 # Sample activity line: one JSON object, as the kit requires log producers to emit.
 printf '%s\n' '{"event_type":"process_exec","action":"spawn","pid":4242}' > "$WORK/sample.log"
 
-# Reuse the kit's parser so the test exercises the real flattening behaviour.
-cp "$HERE/../files/home/.config/fluent-bit/parsers.conf" "$WORK/parsers.conf"
+# The kit's JSON parser, inlined. It is identical to the `[PARSER]` block the
+# kit writes via lifecycle `files:` in siem-telemetry.yaml (a 1:1 copy — keep
+# the two in sync); the descriptor's copy carries `${{ kit.args.* }}` siblings
+# that only sbx expands at create, so the test cannot read the descriptor
+# directly. Exercises the same real flattening behaviour.
+cat > "$WORK/parsers.conf" <<'EOF'
+[PARSER]
+    Name   json
+    Format json
+EOF
 
 # Test conf: mirrors the kit's [OUTPUT] but points at the local mock and pins the
 # two auth headers (what run-telemetry.sh appends when their values are set).
